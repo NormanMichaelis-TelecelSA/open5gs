@@ -253,13 +253,17 @@ int smf_nchf_convergedcharging_send_create(
 }
 
 int smf_nchf_convergedcharging_send_update(
-        smf_sess_t *sess, ogs_sbi_stream_t *stream)
+        smf_sess_t *sess, ogs_pool_id_t pfcp_xact_id)
 {
+    /* Store the PFCP transaction ID so the CHF response handler
+     * can look up the original PFCP xact for the Session Report */
+    sess->nchf.pfcp_xact_id = pfcp_xact_id;
+
     return smf_sbi_discover_and_send(
             OGS_SBI_SERVICE_TYPE_NCHF_CONVERGEDCHARGING,
             NULL,
             smf_nchf_convergedcharging_build_update,
-            sess, stream, 0, NULL);
+            sess, NULL, 0, NULL);
 }
 
 int smf_nchf_convergedcharging_send_release(

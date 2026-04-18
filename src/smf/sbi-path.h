@@ -131,7 +131,7 @@ static inline bool smf_uecm_anchor_in_vplmn(int state)
 int smf_nchf_convergedcharging_send_create(
         smf_sess_t *sess, ogs_sbi_stream_t *stream);
 int smf_nchf_convergedcharging_send_update(
-        smf_sess_t *sess, ogs_sbi_stream_t *stream);
+        smf_sess_t *sess, ogs_pool_id_t pfcp_xact_id);
 int smf_nchf_convergedcharging_send_release(
         smf_sess_t *sess, ogs_sbi_stream_t *stream);
 

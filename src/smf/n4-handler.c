@@ -1752,29 +1752,56 @@ uint8_t smf_n4_handle_session_report_request(
             if (volume.dlvol)
                 sess->gy.dl_octets += volume.downlink_volume;
             sess->gy.duration += use_rep->duration_measurement.u32;
+
+            /* 5GC: also accumulate to Nchf counters */
+            if (!sess->epc) {
+                if (volume.ulvol)
+                    sess->nchf.ul_octets += volume.uplink_volume;
+                if (volume.dlvol)
+                    sess->nchf.dl_octets += volume.downlink_volume;
+                sess->nchf.duration += use_rep->duration_measurement.u32;
+            }
+
             ogs_pfcp_parse_usage_report_trigger(
                     &rep_trig, &use_rep->usage_report_trigger);
             sess->gy.reporting_reason =
                 smf_pfcp_urr_usage_report_trigger2diam_gy_reporting_reason(&rep_trig);
         }
-        switch (smf_use_gy_iface()) {
-        case 1:
-            if (!sess->gy.final_unit) {
-                smf_gy_send_ccr(
-                        sess, pfcp_xact->id,
-                        OGS_DIAM_GY_CC_REQUEST_TYPE_UPDATE_REQUEST);
+
+        /*
+         * Quota replenishment: 5GC sessions with CHF association
+         * use Nchf ChargingDataUpdate; EPC sessions use Gy CCR-U.
+         */
+        if (!sess->epc && CHF_CHARGING_DATA_ASSOCIATED(sess)) {
+            if (!sess->nchf.final_unit) {
+                smf_nchf_convergedcharging_send_update(
+                        sess, pfcp_xact->id);
             } else {
-                ogs_debug("[%s:%s] Rx PFCP report after Gy Final Unit Indication",
-                          smf_ue->imsi_bcd, sess->session.name);
-                /* This effectively triggers session release: */
+                ogs_debug("[%s:%s] Rx PFCP report after Nchf "
+                          "Final Unit Indication",
+                          smf_ue->supi, sess->session.name);
                 cause_value = OGS_PFCP_CAUSE_NO_RESOURCES_AVAILABLE;
             }
-            break;
-        case -1:
-            ogs_error("No Gy Diameter Peer");
-            cause_value = OGS_PFCP_CAUSE_NO_RESOURCES_AVAILABLE;
-            break;
-        /* default: continue below */
+        } else {
+            switch (smf_use_gy_iface()) {
+            case 1:
+                if (!sess->gy.final_unit) {
+                    smf_gy_send_ccr(
+                            sess, pfcp_xact->id,
+                            OGS_DIAM_GY_CC_REQUEST_TYPE_UPDATE_REQUEST);
+                } else {
+                    ogs_debug("[%s:%s] Rx PFCP report after Gy "
+                              "Final Unit Indication",
+                              smf_ue->imsi_bcd, sess->session.name);
+                    cause_value = OGS_PFCP_CAUSE_NO_RESOURCES_AVAILABLE;
+                }
+                break;
+            case -1:
+                ogs_error("No Gy Diameter Peer");
+                cause_value = OGS_PFCP_CAUSE_NO_RESOURCES_AVAILABLE;
+                break;
+            /* default: continue below */
+            }
         }
     }
 

@@ -1889,6 +1889,36 @@ void smf_gsm_state_operational(ogs_fsm_t *s, smf_event_t *e)
             END
             break;
 
+        CASE(OGS_SBI_SERVICE_NAME_NCHF_CONVERGEDCHARGING)
+            /*
+             * CHF ChargingDataUpdate response (quota replenishment).
+             *
+             * Triggered by PFCP usage report → Nchf Update.
+             * On success: snapshot counters, ready for next cycle.
+             * On failure: log warning, session continues.
+             */
+            SWITCH(sbi_message->h.resource.component[0])
+            CASE(OGS_SBI_RESOURCE_NAME_CHARGING_DATA)
+                if (sbi_message->res_status == OGS_SBI_HTTP_STATUS_OK) {
+                    if (!smf_nchf_convergedcharging_handle_update(
+                                sess, stream, sbi_message)) {
+                        ogs_warn("[%s:%d] CHF Update handle failed",
+                                smf_ue->supi, sess->psi);
+                    }
+                } else {
+                    ogs_warn("[%s:%d] CHF Update HTTP error [%d]",
+                            smf_ue->supi, sess->psi,
+                            sbi_message->res_status);
+                }
+                break;
+
+            DEFAULT
+                ogs_error("[%s:%d] Invalid resource name [%s]",
+                        smf_ue->supi, sess->psi,
+                        sbi_message->h.resource.component[0]);
+            END
+            break;
+
         DEFAULT
             ogs_error("[%s:%d] Invalid API name [%s]",
                     smf_ue->supi, sess->psi, sbi_message->h.service.name);

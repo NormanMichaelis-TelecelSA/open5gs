@@ -649,6 +649,7 @@ typedef struct smf_sess_s {
         ogs_time_t duration;
         uint32_t invocation_sequence_number; /* incremented on each Create/Update */
         bool final_unit;                     /* FinalUnitIndication received */
+        ogs_pool_id_t pfcp_xact_id;          /* PFCP xact awaiting CHF response */
         struct {
             uint64_t ul_octets;
             uint64_t dl_octets;

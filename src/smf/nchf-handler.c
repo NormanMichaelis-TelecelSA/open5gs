@@ -130,6 +130,18 @@ bool smf_nchf_convergedcharging_handle_update(
     ogs_info("[%s:%d] CHF ChargingData updated [%s]",
             smf_ue->supi, sess->psi, sess->nchf_association.id);
 
+    /*
+     * Usage counters were already snapshotted by the builder
+     * (build_multiple_unit_usage) when the request was constructed.
+     *
+     * TODO (Phase 8): Parse grantedUnit / finalUnitIndication from
+     * CHF response and update URR volume/time quota accordingly,
+     * then send PFCP Session Modification to UPF with new quota.
+     *
+     * For now the loop is complete: usage was reported to CHF,
+     * and the next PFCP threshold trigger will send another Update.
+     */
+
     return true;
 }
 
