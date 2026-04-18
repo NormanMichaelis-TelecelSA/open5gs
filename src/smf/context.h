@@ -299,6 +299,12 @@ typedef struct smf_sess_s {
         uint32_t gy_cca_term_err; /* Gy CCA RXed error code */
         bool s6b_str_in_flight; /* Waiting for S6B CCA */
         uint32_t s6b_sta_err; /* S6B CCA RXed error code */
+        bool nchf_create_in_flight; /* Waiting for Nchf ChargingDataCreate response */
+        uint32_t nchf_create_err; /* Nchf Create error result code */
+        bool nchf_update_in_flight; /* Waiting for Nchf ChargingDataUpdate response */
+        uint32_t nchf_update_err; /* Nchf Update error result code */
+        bool nchf_release_in_flight; /* Waiting for Nchf ChargingDataRelease response */
+        uint32_t nchf_release_err; /* Nchf Release error result code */
     } sm_data;
 
     bool            epc;            /**< EPC or 5GC */
@@ -412,6 +418,37 @@ typedef struct smf_sess_s {
         char *id;
         ogs_sbi_client_t *client;
     } policy_association;
+
+    /* CHF sends the RESPONSE
+     * of [POST] /nchf-convergedcharging/v3/chargingdata (TS 32.291) */
+#define CHF_CHARGING_DATA_ASSOCIATED(__sESS) \
+    ((__sESS) && ((__sESS)->nchf_association.id))
+#define CHF_CHARGING_DATA_CLEAR(__sESS) \
+    do { \
+        ogs_assert((__sESS)); \
+        if ((__sESS)->nchf_association.resource_uri) \
+            ogs_free((__sESS)->nchf_association.resource_uri); \
+        (__sESS)->nchf_association.resource_uri = NULL; \
+        if ((__sESS)->nchf_association.id) \
+            ogs_free((__sESS)->nchf_association.id); \
+        (__sESS)->nchf_association.id = NULL; \
+    } while(0)
+#define CHF_CHARGING_DATA_STORE(__sESS, __rESOURCE_URI, __iD) \
+    do { \
+        ogs_assert((__sESS)); \
+        ogs_assert((__rESOURCE_URI)); \
+        ogs_assert((__iD)); \
+        CHF_CHARGING_DATA_CLEAR(__sESS); \
+        (__sESS)->nchf_association.resource_uri = ogs_strdup(__rESOURCE_URI); \
+        ogs_assert((__sESS)->nchf_association.resource_uri); \
+        (__sESS)->nchf_association.id = ogs_strdup(__iD); \
+        ogs_assert((__sESS)->nchf_association.id); \
+    } while(0)
+    struct {
+        char *resource_uri;     /* Full Location URI from ChargingDataCreate 201 response */
+        char *id;               /* ChargingDataRef path component */
+        ogs_sbi_client_t *client;
+    } nchf_association;
 
     /* SubscriptionId of Subscription to Data Change Notification to UDM */
 #define UDM_SDM_SUBSCRIBED(__sESS) \
@@ -604,6 +641,20 @@ typedef struct smf_sess_s {
             ogs_time_t duration;
         } last_report;
     } gy;
+
+    /* Nchf_ConvergedCharging (TS 32.291) online charging usage tracking */
+    struct {
+        uint64_t ul_octets;
+        uint64_t dl_octets;
+        ogs_time_t duration;
+        uint32_t invocation_sequence_number; /* incremented on each Create/Update */
+        bool final_unit;                     /* FinalUnitIndication received */
+        struct {
+            uint64_t ul_octets;
+            uint64_t dl_octets;
+            ogs_time_t duration;
+        } last_report;
+    } nchf;
 
     struct {
         ogs_nas_extended_protocol_configuration_options_t ue_epco;

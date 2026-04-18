@@ -12,6 +12,7 @@
 #include "../include/list.h"
 #include "../include/keyValuePair.h"
 #include "../include/binary.h"
+#include "object.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -20,14 +21,10 @@ extern "C" {
 typedef struct OpenAPI_redirect_response_s OpenAPI_redirect_response_t;
 typedef struct OpenAPI_redirect_response_s {
     char *cause;
-    char *target_scp;
-    char *target_sepp;
 } OpenAPI_redirect_response_t;
 
 OpenAPI_redirect_response_t *OpenAPI_redirect_response_create(
     char *cause,
-    char *target_scp,
-    char *target_sepp
 );
 void OpenAPI_redirect_response_free(OpenAPI_redirect_response_t *redirect_response);
 OpenAPI_redirect_response_t *OpenAPI_redirect_response_parseFromJSON(cJSON *redirect_responseJSON);

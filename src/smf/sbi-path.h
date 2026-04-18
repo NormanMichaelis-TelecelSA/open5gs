@@ -26,6 +26,7 @@
 #include "gsm-build.h"
 #include "nnrf-build.h"
 #include "npcf-build.h"
+#include "nchf-build.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -125,6 +126,14 @@ static inline bool smf_uecm_anchor_in_vplmn(int state)
 {
     return !(state & SMF_STATE_HR);
 }
+
+/* Nchf_ConvergedCharging send helpers (5GC only) */
+int smf_nchf_convergedcharging_send_create(
+        smf_sess_t *sess, ogs_sbi_stream_t *stream);
+int smf_nchf_convergedcharging_send_update(
+        smf_sess_t *sess, ogs_sbi_stream_t *stream);
+int smf_nchf_convergedcharging_send_release(
+        smf_sess_t *sess, ogs_sbi_stream_t *stream);
 
 ogs_sbi_xact_t *smf_namf_comm_create_n1_n2_message_xact(
         smf_sess_t *sess, ogs_sbi_stream_t *stream,

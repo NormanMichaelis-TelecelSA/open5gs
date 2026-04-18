@@ -16,8 +16,7 @@ OpenAPI_trigger_t *OpenAPI_trigger_create(
     bool is_event_limit,
     int event_limit,
     bool is_max_number_ofccc,
-    int max_number_ofccc,
-    char *tariff_time_change
+    int max_number_ofccc
 )
 {
     OpenAPI_trigger_t *trigger_local_var = ogs_malloc(sizeof(OpenAPI_trigger_t));
@@ -35,7 +34,6 @@ OpenAPI_trigger_t *OpenAPI_trigger_create(
     trigger_local_var->event_limit = event_limit;
     trigger_local_var->is_max_number_ofccc = is_max_number_ofccc;
     trigger_local_var->max_number_ofccc = max_number_ofccc;
-    trigger_local_var->tariff_time_change = tariff_time_change;
 
     return trigger_local_var;
 }
@@ -54,10 +52,6 @@ void OpenAPI_trigger_free(OpenAPI_trigger_t *trigger)
     if (trigger->trigger_category) {
         OpenAPI_trigger_category_free(trigger->trigger_category);
         trigger->trigger_category = NULL;
-    }
-    if (trigger->tariff_time_change) {
-        ogs_free(trigger->tariff_time_change);
-        trigger->tariff_time_change = NULL;
     }
     ogs_free(trigger);
 }
@@ -138,13 +132,6 @@ cJSON *OpenAPI_trigger_convertToJSON(OpenAPI_trigger_t *trigger)
     }
     }
 
-    if (trigger->tariff_time_change) {
-    if (cJSON_AddStringToObject(item, "tariffTimeChange", trigger->tariff_time_change) == NULL) {
-        ogs_error("OpenAPI_trigger_convertToJSON() failed [tariff_time_change]");
-        goto end;
-    }
-    }
-
 end:
     return item;
 }
@@ -162,7 +149,6 @@ OpenAPI_trigger_t *OpenAPI_trigger_parseFromJSON(cJSON *triggerJSON)
     cJSON *volume_limit64 = NULL;
     cJSON *event_limit = NULL;
     cJSON *max_number_ofccc = NULL;
-    cJSON *tariff_time_change = NULL;
     trigger_type = cJSON_GetObjectItemCaseSensitive(triggerJSON, "triggerType");
     if (!trigger_type) {
         ogs_error("OpenAPI_trigger_parseFromJSON() failed [trigger_type]");
@@ -225,14 +211,6 @@ OpenAPI_trigger_t *OpenAPI_trigger_parseFromJSON(cJSON *triggerJSON)
     }
     }
 
-    tariff_time_change = cJSON_GetObjectItemCaseSensitive(triggerJSON, "tariffTimeChange");
-    if (tariff_time_change) {
-    if (!cJSON_IsString(tariff_time_change) && !cJSON_IsNull(tariff_time_change)) {
-        ogs_error("OpenAPI_trigger_parseFromJSON() failed [tariff_time_change]");
-        goto end;
-    }
-    }
-
     trigger_local_var = OpenAPI_trigger_create (
         trigger_type_local_nonprim,
         trigger_category_local_nonprim,
@@ -245,8 +223,7 @@ OpenAPI_trigger_t *OpenAPI_trigger_parseFromJSON(cJSON *triggerJSON)
         event_limit ? true : false,
         event_limit ? event_limit->valuedouble : 0,
         max_number_ofccc ? true : false,
-        max_number_ofccc ? max_number_ofccc->valuedouble : 0,
-        tariff_time_change && !cJSON_IsNull(tariff_time_change) ? ogs_strdup(tariff_time_change->valuestring) : NULL
+        max_number_ofccc ? max_number_ofccc->valuedouble : 0
     );
 
     return trigger_local_var;

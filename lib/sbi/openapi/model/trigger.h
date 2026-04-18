@@ -33,7 +33,6 @@ typedef struct OpenAPI_trigger_s {
     int event_limit;
     bool is_max_number_ofccc;
     int max_number_ofccc;
-    char *tariff_time_change;
 } OpenAPI_trigger_t;
 
 OpenAPI_trigger_t *OpenAPI_trigger_create(
@@ -48,8 +47,7 @@ OpenAPI_trigger_t *OpenAPI_trigger_create(
     bool is_event_limit,
     int event_limit,
     bool is_max_number_ofccc,
-    int max_number_ofccc,
-    char *tariff_time_change
+    int max_number_ofccc
 );
 void OpenAPI_trigger_free(OpenAPI_trigger_t *trigger);
 OpenAPI_trigger_t *OpenAPI_trigger_parseFromJSON(cJSON *triggerJSON);

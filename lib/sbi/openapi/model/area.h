@@ -12,6 +12,7 @@
 #include "../include/list.h"
 #include "../include/keyValuePair.h"
 #include "../include/binary.h"
+#include "object.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -20,12 +21,10 @@ extern "C" {
 typedef struct OpenAPI_area_s OpenAPI_area_t;
 typedef struct OpenAPI_area_s {
     OpenAPI_list_t *tacs;
-    char *area_code;
 } OpenAPI_area_t;
 
 OpenAPI_area_t *OpenAPI_area_create(
     OpenAPI_list_t *tacs,
-    char *area_code
 );
 void OpenAPI_area_free(OpenAPI_area_t *area);
 OpenAPI_area_t *OpenAPI_area_parseFromJSON(cJSON *areaJSON);

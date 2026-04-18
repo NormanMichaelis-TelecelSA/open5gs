@@ -966,6 +966,7 @@ void smf_state_operational(ogs_fsm_t *s, smf_event_t *e)
 
         CASE(OGS_SBI_SERVICE_NAME_NUDM_SDM)
         CASE(OGS_SBI_SERVICE_NAME_NPCF_SMPOLICYCONTROL)
+        CASE(OGS_SBI_SERVICE_NAME_NCHF_CONVERGEDCHARGING)
         CASE(OGS_SBI_SERVICE_NAME_NAMF_COMM)
         CASE(OGS_SBI_SERVICE_NAME_NSMF_PDUSESSION)
             sbi_xact_id = OGS_POINTER_TO_UINT(e->h.sbi.data);

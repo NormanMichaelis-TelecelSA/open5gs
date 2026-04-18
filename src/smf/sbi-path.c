@@ -72,6 +72,9 @@ int smf_sbi_open(void)
             OpenAPI_nf_type_NULL, OGS_SBI_SERVICE_NAME_NUDM_SDM);
     ogs_sbi_subscription_spec_add(
             OpenAPI_nf_type_NULL, OGS_SBI_SERVICE_NAME_NUDM_UECM);
+    ogs_sbi_subscription_spec_add(
+            OpenAPI_nf_type_NULL,
+            OGS_SBI_SERVICE_NAME_NCHF_CONVERGEDCHARGING);
 
     if (ogs_sbi_server_start_all(ogs_sbi_server_handler) != OGS_OK)
         return OGS_ERROR;
@@ -234,6 +237,39 @@ int smf_sbi_discover_and_send(
     }
 
     return OGS_OK;
+}
+
+/*
+ * Nchf_ConvergedCharging send helpers (5GC only)
+ */
+int smf_nchf_convergedcharging_send_create(
+        smf_sess_t *sess, ogs_sbi_stream_t *stream)
+{
+    return smf_sbi_discover_and_send(
+            OGS_SBI_SERVICE_TYPE_NCHF_CONVERGEDCHARGING,
+            NULL,
+            smf_nchf_convergedcharging_build_create,
+            sess, stream, 0, NULL);
+}
+
+int smf_nchf_convergedcharging_send_update(
+        smf_sess_t *sess, ogs_sbi_stream_t *stream)
+{
+    return smf_sbi_discover_and_send(
+            OGS_SBI_SERVICE_TYPE_NCHF_CONVERGEDCHARGING,
+            NULL,
+            smf_nchf_convergedcharging_build_update,
+            sess, stream, 0, NULL);
+}
+
+int smf_nchf_convergedcharging_send_release(
+        smf_sess_t *sess, ogs_sbi_stream_t *stream)
+{
+    return smf_sbi_discover_and_send(
+            OGS_SBI_SERVICE_TYPE_NCHF_CONVERGEDCHARGING,
+            NULL,
+            smf_nchf_convergedcharging_build_release,
+            sess, stream, 0, NULL);
 }
 
 ogs_sbi_xact_t *smf_namf_comm_create_n1_n2_message_xact(
@@ -861,7 +897,21 @@ int smf_sbi_cleanup_session(
 
     switch (mode) {
     case SMF_SBI_CLEANUP_MODE_POLICY_FIRST:
-        if (PCF_SM_POLICY_ASSOCIATED(sess)) {
+        /*
+         * If CHF charging data is associated (5GC only),
+         * release it first.  The CHF release response handler
+         * in smf_gsm_state_5gc_session_will_deregister will
+         * then chain to the PCF policy delete.
+         */
+        if (CHF_CHARGING_DATA_ASSOCIATED(sess)) {
+            r = smf_sbi_discover_and_send(
+                OGS_SBI_SERVICE_TYPE_NCHF_CONVERGEDCHARGING,
+                NULL,
+                smf_nchf_convergedcharging_build_release,
+                sess, stream, state, NULL);
+            ogs_expect(r == OGS_OK);
+            ogs_assert(r != OGS_ERROR);
+        } else if (PCF_SM_POLICY_ASSOCIATED(sess)) {
             r = smf_sbi_discover_and_send(
                 OGS_SBI_SERVICE_TYPE_NPCF_SMPOLICYCONTROL,
                 NULL,

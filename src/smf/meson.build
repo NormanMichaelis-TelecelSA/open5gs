@@ -58,6 +58,8 @@ libsmf_sources = files('''
     nsmf-handler.h
     namf-build.h
     namf-handler.h
+    nchf-build.h
+    nchf-handler.h
     npcf-build.h
     npcf-handler.h
     sbi-path.h
@@ -101,6 +103,8 @@ libsmf_sources = files('''
     nsmf-handler.c
     namf-build.c
     namf-handler.c
+    nchf-build.c
+    nchf-handler.c
     npcf-build.c
     npcf-handler.c
     sbi-path.c

@@ -6,7 +6,6 @@
 
 OpenAPI_area_t *OpenAPI_area_create(
     OpenAPI_list_t *tacs,
-    char *area_code
 )
 {
     OpenAPI_area_t *area_local_var = ogs_malloc(sizeof(OpenAPI_area_t));
@@ -31,10 +30,6 @@ void OpenAPI_area_free(OpenAPI_area_t *area)
         }
         OpenAPI_list_free(area->tacs);
         area->tacs = NULL;
-    }
-    if (area->area_code) {
-        ogs_free(area->area_code);
-        area->area_code = NULL;
     }
     ogs_free(area);
 }
@@ -65,10 +60,6 @@ cJSON *OpenAPI_area_convertToJSON(OpenAPI_area_t *area)
     }
 
     if (area->area_code) {
-    if (cJSON_AddStringToObject(item, "areaCode", area->area_code) == NULL) {
-        ogs_error("OpenAPI_area_convertToJSON() failed [area_code]");
-        goto end;
-    }
     }
 
 end:
@@ -105,15 +96,10 @@ OpenAPI_area_t *OpenAPI_area_parseFromJSON(cJSON *areaJSON)
 
     area_code = cJSON_GetObjectItemCaseSensitive(areaJSON, "areaCode");
     if (area_code) {
-    if (!cJSON_IsString(area_code) && !cJSON_IsNull(area_code)) {
-        ogs_error("OpenAPI_area_parseFromJSON() failed [area_code]");
-        goto end;
-    }
     }
 
     area_local_var = OpenAPI_area_create (
         tacs ? tacsList : NULL,
-        area_code && !cJSON_IsNull(area_code) ? ogs_strdup(area_code->valuestring) : NULL
     );
 
     return area_local_var;
