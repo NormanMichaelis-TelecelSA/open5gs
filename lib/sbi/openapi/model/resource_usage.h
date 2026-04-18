@@ -12,7 +12,6 @@
 #include "../include/list.h"
 #include "../include/keyValuePair.h"
 #include "../include/binary.h"
-#include "object.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -20,9 +19,21 @@ extern "C" {
 
 typedef struct OpenAPI_resource_usage_s OpenAPI_resource_usage_t;
 typedef struct OpenAPI_resource_usage_s {
+    bool is_cpu_usage;
+    int cpu_usage;
+    bool is_memory_usage;
+    int memory_usage;
+    bool is_storage_usage;
+    int storage_usage;
 } OpenAPI_resource_usage_t;
 
 OpenAPI_resource_usage_t *OpenAPI_resource_usage_create(
+    bool is_cpu_usage,
+    int cpu_usage,
+    bool is_memory_usage,
+    int memory_usage,
+    bool is_storage_usage,
+    int storage_usage
 );
 void OpenAPI_resource_usage_free(OpenAPI_resource_usage_t *resource_usage);
 OpenAPI_resource_usage_t *OpenAPI_resource_usage_parseFromJSON(cJSON *resource_usageJSON);

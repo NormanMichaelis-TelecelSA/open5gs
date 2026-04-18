@@ -17,18 +17,12 @@ OpenAPI__chargingdata_post_400_response_t *OpenAPI__chargingdata_post_400_respon
     OpenAPI__chargingdata_post_400_response_t *_chargingdata_post_400_response_local_var = ogs_malloc(sizeof(OpenAPI__chargingdata_post_400_response_t));
     ogs_assert(_chargingdata_post_400_response_local_var);
 
-    _chargingdata_post_400_response_local_var->type = type;
     _chargingdata_post_400_response_local_var->title = title;
     _chargingdata_post_400_response_local_var->is_status = is_status;
     _chargingdata_post_400_response_local_var->status = status;
     _chargingdata_post_400_response_local_var->detail = detail;
-    _chargingdata_post_400_response_local_var->instance = instance;
     _chargingdata_post_400_response_local_var->cause = cause;
     _chargingdata_post_400_response_local_var->invalid_params = invalid_params;
-    _chargingdata_post_400_response_local_var->supported_features = supported_features;
-    _chargingdata_post_400_response_local_var->access_token_error = access_token_error;
-    _chargingdata_post_400_response_local_var->access_token_request = access_token_request;
-    _chargingdata_post_400_response_local_var->nrf_id = nrf_id;
     _chargingdata_post_400_response_local_var->invocation_result = invocation_result;
 
     return _chargingdata_post_400_response_local_var;
@@ -78,9 +72,6 @@ cJSON *OpenAPI__chargingdata_post_400_response_convertToJSON(OpenAPI__chargingda
     }
 
     item = cJSON_CreateObject();
-    if (_chargingdata_post_400_response->type) {
-    }
-
     if (_chargingdata_post_400_response->title) {
     if (cJSON_AddStringToObject(item, "title", _chargingdata_post_400_response->title) == NULL) {
         ogs_error("OpenAPI__chargingdata_post_400_response_convertToJSON() failed [title]");
@@ -100,9 +91,6 @@ cJSON *OpenAPI__chargingdata_post_400_response_convertToJSON(OpenAPI__chargingda
         ogs_error("OpenAPI__chargingdata_post_400_response_convertToJSON() failed [detail]");
         goto end;
     }
-    }
-
-    if (_chargingdata_post_400_response->instance) {
     }
 
     if (_chargingdata_post_400_response->cause) {
@@ -126,18 +114,6 @@ cJSON *OpenAPI__chargingdata_post_400_response_convertToJSON(OpenAPI__chargingda
         }
         cJSON_AddItemToArray(invalid_paramsList, itemLocal);
     }
-    }
-
-    if (_chargingdata_post_400_response->supported_features) {
-    }
-
-    if (_chargingdata_post_400_response->access_token_error) {
-    }
-
-    if (_chargingdata_post_400_response->access_token_request) {
-    }
-
-    if (_chargingdata_post_400_response->nrf_id) {
     }
 
     if (_chargingdata_post_400_response->invocation_result) {

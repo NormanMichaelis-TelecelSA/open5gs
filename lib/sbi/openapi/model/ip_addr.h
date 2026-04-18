@@ -12,7 +12,6 @@
 #include "../include/list.h"
 #include "../include/keyValuePair.h"
 #include "../include/binary.h"
-#include "object.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -20,9 +19,15 @@ extern "C" {
 
 typedef struct OpenAPI_ip_addr_s OpenAPI_ip_addr_t;
 typedef struct OpenAPI_ip_addr_s {
+    char *ipv4_addr;
+    char *ipv6_addr;
+    char *ipv6_prefix;
 } OpenAPI_ip_addr_t;
 
 OpenAPI_ip_addr_t *OpenAPI_ip_addr_create(
+    char *ipv4_addr,
+    char *ipv6_addr,
+    char *ipv6_prefix
 );
 void OpenAPI_ip_addr_free(OpenAPI_ip_addr_t *ip_addr);
 OpenAPI_ip_addr_t *OpenAPI_ip_addr_parseFromJSON(cJSON *ip_addrJSON);

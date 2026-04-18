@@ -26,18 +26,13 @@ OpenAPI__chargingdata__charging_data_ref__update_post_400_response_t *OpenAPI__c
     OpenAPI__chargingdata__charging_data_ref__update_post_400_response_t *_chargingdata__charging_data_ref__update_post_400_response_local_var = ogs_malloc(sizeof(OpenAPI__chargingdata__charging_data_ref__update_post_400_response_t));
     ogs_assert(_chargingdata__charging_data_ref__update_post_400_response_local_var);
 
-    _chargingdata__charging_data_ref__update_post_400_response_local_var->type = type;
     _chargingdata__charging_data_ref__update_post_400_response_local_var->title = title;
     _chargingdata__charging_data_ref__update_post_400_response_local_var->is_status = is_status;
     _chargingdata__charging_data_ref__update_post_400_response_local_var->status = status;
     _chargingdata__charging_data_ref__update_post_400_response_local_var->detail = detail;
-    _chargingdata__charging_data_ref__update_post_400_response_local_var->instance = instance;
     _chargingdata__charging_data_ref__update_post_400_response_local_var->cause = cause;
     _chargingdata__charging_data_ref__update_post_400_response_local_var->invalid_params = invalid_params;
     _chargingdata__charging_data_ref__update_post_400_response_local_var->supported_features = supported_features;
-    _chargingdata__charging_data_ref__update_post_400_response_local_var->access_token_error = access_token_error;
-    _chargingdata__charging_data_ref__update_post_400_response_local_var->access_token_request = access_token_request;
-    _chargingdata__charging_data_ref__update_post_400_response_local_var->nrf_id = nrf_id;
     _chargingdata__charging_data_ref__update_post_400_response_local_var->invocation_time_stamp = invocation_time_stamp;
     _chargingdata__charging_data_ref__update_post_400_response_local_var->invocation_sequence_number = invocation_sequence_number;
     _chargingdata__charging_data_ref__update_post_400_response_local_var->invocation_result = invocation_result;
@@ -133,9 +128,6 @@ cJSON *OpenAPI__chargingdata__charging_data_ref__update_post_400_response_conver
     }
 
     item = cJSON_CreateObject();
-    if (_chargingdata__charging_data_ref__update_post_400_response->type) {
-    }
-
     if (_chargingdata__charging_data_ref__update_post_400_response->title) {
     if (cJSON_AddStringToObject(item, "title", _chargingdata__charging_data_ref__update_post_400_response->title) == NULL) {
         ogs_error("OpenAPI__chargingdata__charging_data_ref__update_post_400_response_convertToJSON() failed [title]");
@@ -155,9 +147,6 @@ cJSON *OpenAPI__chargingdata__charging_data_ref__update_post_400_response_conver
         ogs_error("OpenAPI__chargingdata__charging_data_ref__update_post_400_response_convertToJSON() failed [detail]");
         goto end;
     }
-    }
-
-    if (_chargingdata__charging_data_ref__update_post_400_response->instance) {
     }
 
     if (_chargingdata__charging_data_ref__update_post_400_response->cause) {
@@ -188,15 +177,6 @@ cJSON *OpenAPI__chargingdata__charging_data_ref__update_post_400_response_conver
         ogs_error("OpenAPI__chargingdata__charging_data_ref__update_post_400_response_convertToJSON() failed [supported_features]");
         goto end;
     }
-    }
-
-    if (_chargingdata__charging_data_ref__update_post_400_response->access_token_error) {
-    }
-
-    if (_chargingdata__charging_data_ref__update_post_400_response->access_token_request) {
-    }
-
-    if (_chargingdata__charging_data_ref__update_post_400_response->nrf_id) {
     }
 
     if (!_chargingdata__charging_data_ref__update_post_400_response->invocation_time_stamp) {

@@ -6,18 +6,14 @@
 
 OpenAPI_eas_requirements_t *OpenAPI_eas_requirements_create(
     bool is_service_continuity,
-    int service_continuity,
+    int service_continuity
 )
 {
     OpenAPI_eas_requirements_t *eas_requirements_local_var = ogs_malloc(sizeof(OpenAPI_eas_requirements_t));
     ogs_assert(eas_requirements_local_var);
 
-    eas_requirements_local_var->required_ea_sserving_location = required_ea_sserving_location;
-    eas_requirements_local_var->software_image_info = software_image_info;
-    eas_requirements_local_var->affinity_anti_affinity = affinity_anti_affinity;
     eas_requirements_local_var->is_service_continuity = is_service_continuity;
     eas_requirements_local_var->service_continuity = service_continuity;
-    eas_requirements_local_var->virtual_resource = virtual_resource;
 
     return eas_requirements_local_var;
 }
@@ -43,23 +39,11 @@ cJSON *OpenAPI_eas_requirements_convertToJSON(OpenAPI_eas_requirements_t *eas_re
     }
 
     item = cJSON_CreateObject();
-    if (eas_requirements->required_ea_sserving_location) {
-    }
-
-    if (eas_requirements->software_image_info) {
-    }
-
-    if (eas_requirements->affinity_anti_affinity) {
-    }
-
     if (eas_requirements->is_service_continuity) {
     if (cJSON_AddBoolToObject(item, "serviceContinuity", eas_requirements->service_continuity) == NULL) {
         ogs_error("OpenAPI_eas_requirements_convertToJSON() failed [service_continuity]");
         goto end;
     }
-    }
-
-    if (eas_requirements->virtual_resource) {
     }
 
 end:
@@ -70,23 +54,7 @@ OpenAPI_eas_requirements_t *OpenAPI_eas_requirements_parseFromJSON(cJSON *eas_re
 {
     OpenAPI_eas_requirements_t *eas_requirements_local_var = NULL;
     OpenAPI_lnode_t *node = NULL;
-    cJSON *required_ea_sserving_location = NULL;
-    cJSON *software_image_info = NULL;
-    cJSON *affinity_anti_affinity = NULL;
     cJSON *service_continuity = NULL;
-    cJSON *virtual_resource = NULL;
-    required_ea_sserving_location = cJSON_GetObjectItemCaseSensitive(eas_requirementsJSON, "requiredEASservingLocation");
-    if (required_ea_sserving_location) {
-    }
-
-    software_image_info = cJSON_GetObjectItemCaseSensitive(eas_requirementsJSON, "softwareImageInfo");
-    if (software_image_info) {
-    }
-
-    affinity_anti_affinity = cJSON_GetObjectItemCaseSensitive(eas_requirementsJSON, "affinityAntiAffinity");
-    if (affinity_anti_affinity) {
-    }
-
     service_continuity = cJSON_GetObjectItemCaseSensitive(eas_requirementsJSON, "serviceContinuity");
     if (service_continuity) {
     if (!cJSON_IsBool(service_continuity)) {
@@ -95,13 +63,9 @@ OpenAPI_eas_requirements_t *OpenAPI_eas_requirements_parseFromJSON(cJSON *eas_re
     }
     }
 
-    virtual_resource = cJSON_GetObjectItemCaseSensitive(eas_requirementsJSON, "virtualResource");
-    if (virtual_resource) {
-    }
-
     eas_requirements_local_var = OpenAPI_eas_requirements_create (
         service_continuity ? true : false,
-        service_continuity ? service_continuity->valueint : 0,
+        service_continuity ? service_continuity->valueint : 0
     );
 
     return eas_requirements_local_var;

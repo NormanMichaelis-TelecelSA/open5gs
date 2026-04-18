@@ -26,7 +26,7 @@ typedef struct OpenAPI_eas_requirements_s {
 
 OpenAPI_eas_requirements_t *OpenAPI_eas_requirements_create(
     bool is_service_continuity,
-    int service_continuity,
+    int service_continuity
 );
 void OpenAPI_eas_requirements_free(OpenAPI_eas_requirements_t *eas_requirements);
 OpenAPI_eas_requirements_t *OpenAPI_eas_requirements_parseFromJSON(cJSON *eas_requirementsJSON);
