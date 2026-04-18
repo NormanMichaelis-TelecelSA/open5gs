@@ -27,6 +27,7 @@
 #include "nnrf-build.h"
 #include "npcf-build.h"
 #include "nchf-build.h"
+#include "nchf-offline-build.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -133,6 +134,14 @@ int smf_nchf_convergedcharging_send_create(
 int smf_nchf_convergedcharging_send_update(
         smf_sess_t *sess, ogs_pool_id_t pfcp_xact_id);
 int smf_nchf_convergedcharging_send_release(
+        smf_sess_t *sess, ogs_sbi_stream_t *stream);
+
+/* Nchf_OfflineOnlyCharging send helpers (5GC only) */
+int smf_nchf_offlineonlycharging_send_create(
+        smf_sess_t *sess, ogs_sbi_stream_t *stream);
+int smf_nchf_offlineonlycharging_send_update(
+        smf_sess_t *sess, ogs_pool_id_t pfcp_xact_id);
+int smf_nchf_offlineonlycharging_send_release(
         smf_sess_t *sess, ogs_sbi_stream_t *stream);
 
 ogs_sbi_xact_t *smf_namf_comm_create_n1_n2_message_xact(

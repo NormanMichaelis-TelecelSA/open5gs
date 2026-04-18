@@ -308,6 +308,8 @@ typedef struct smf_sess_s {
     } sm_data;
 
     bool            epc;            /**< EPC or 5GC */
+    bool            offline_charging; /**< true = use OfflineOnlyCharging
+                                           instead of ConvergedCharging */
 
     ogs_pfcp_sess_t pfcp;           /* PFCP session context */
 
@@ -449,6 +451,39 @@ typedef struct smf_sess_s {
         char *id;               /* ChargingDataRef path component */
         ogs_sbi_client_t *client;
     } nchf_association;
+
+    /* CHF sends the RESPONSE
+     * of [POST] /nchf-offlineonlycharging/v3/offlinechargingdata
+     * (TS 32.291 Section 7) */
+#define NCHF_OFFLINE_DATA_ASSOCIATED(__sESS) \
+    ((__sESS) && ((__sESS)->nchf_offline_association.id))
+#define NCHF_OFFLINE_DATA_CLEAR(__sESS) \
+    do { \
+        ogs_assert((__sESS)); \
+        if ((__sESS)->nchf_offline_association.resource_uri) \
+            ogs_free((__sESS)->nchf_offline_association.resource_uri); \
+        (__sESS)->nchf_offline_association.resource_uri = NULL; \
+        if ((__sESS)->nchf_offline_association.id) \
+            ogs_free((__sESS)->nchf_offline_association.id); \
+        (__sESS)->nchf_offline_association.id = NULL; \
+    } while(0)
+#define NCHF_OFFLINE_DATA_STORE(__sESS, __rESOURCE_URI, __iD) \
+    do { \
+        ogs_assert((__sESS)); \
+        ogs_assert((__rESOURCE_URI)); \
+        ogs_assert((__iD)); \
+        NCHF_OFFLINE_DATA_CLEAR(__sESS); \
+        (__sESS)->nchf_offline_association.resource_uri = \
+            ogs_strdup(__rESOURCE_URI); \
+        ogs_assert((__sESS)->nchf_offline_association.resource_uri); \
+        (__sESS)->nchf_offline_association.id = ogs_strdup(__iD); \
+        ogs_assert((__sESS)->nchf_offline_association.id); \
+    } while(0)
+    struct {
+        char *resource_uri;     /* Full Location URI from OfflineChargingDataCreate 201 */
+        char *id;               /* ChargingDataRef path component */
+        ogs_sbi_client_t *client;
+    } nchf_offline_association;
 
     /* SubscriptionId of Subscription to Data Change Notification to UDM */
 #define UDM_SDM_SUBSCRIBED(__sESS) \
@@ -656,6 +691,19 @@ typedef struct smf_sess_s {
             ogs_time_t duration;
         } last_report;
     } nchf;
+
+    /* Nchf_OfflineOnlyCharging (TS 32.291 Section 7) CDR usage tracking */
+    struct {
+        uint64_t ul_octets;
+        uint64_t dl_octets;
+        ogs_time_t duration;
+        ogs_pool_id_t pfcp_xact_id;          /* PFCP xact awaiting CHF response */
+        struct {
+            uint64_t ul_octets;
+            uint64_t dl_octets;
+            ogs_time_t duration;
+        } last_report;
+    } nchf_offline;
 
     struct {
         ogs_nas_extended_protocol_configuration_options_t ue_epco;

@@ -1856,6 +1856,10 @@ void smf_sess_remove(smf_sess_t *sess)
     if (sess->pdu_session.client)
         ogs_sbi_client_remove(sess->pdu_session.client);
 
+    NCHF_OFFLINE_DATA_CLEAR(sess);
+    if (sess->nchf_offline_association.client)
+        ogs_sbi_client_remove(sess->nchf_offline_association.client);
+
     PCF_SM_POLICY_CLEAR(sess);
     if (sess->policy_association.client)
         ogs_sbi_client_remove(sess->policy_association.client);

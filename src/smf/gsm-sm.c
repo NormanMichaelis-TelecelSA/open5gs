@@ -29,6 +29,7 @@
 #include "nudm-handler.h"
 #include "npcf-handler.h"
 #include "nchf-handler.h"
+#include "nchf-offline-handler.h"
 #include "namf-handler.h"
 #include "gsm-handler.h"
 #include "ngap-handler.h"
@@ -697,7 +698,26 @@ void smf_gsm_state_wait_5gc_sm_policy_association(ogs_fsm_t *s, smf_event_t *e)
                      * EPC sessions (sess->epc) never reach this
                      * state, but guard defensively.
                      */
-                    if (!sess->epc) {
+                    if (!sess->epc && sess->offline_charging) {
+                        /*
+                         * OfflineOnlyCharging: CDR recording only,
+                         * no quota grants.
+                         */
+                        int r;
+                        sess->sm_data.nchf_create_in_flight = true;
+                        r = smf_nchf_offlineonlycharging_send_create(
+                                sess, stream);
+                        if (r != OGS_OK) {
+                            ogs_warn("[%s:%d] CHF Offline Create "
+                                    "send failed, proceeding "
+                                    "without charging",
+                                    smf_ue->supi, sess->psi);
+                            sess->sm_data.nchf_create_in_flight = false;
+                            OGS_FSM_TRAN(s,
+                                &smf_gsm_state_wait_pfcp_establishment);
+                        }
+                        /* else: stay in this state, wait for CHF */
+                    } else if (!sess->epc) {
                         int r;
                         sess->sm_data.nchf_create_in_flight = true;
                         r = smf_nchf_convergedcharging_send_create(
@@ -770,6 +790,53 @@ void smf_gsm_state_wait_5gc_sm_policy_association(ogs_fsm_t *s, smf_event_t *e)
 
             DEFAULT
                 ogs_error("[%s:%d] Invalid CHF resource [%s]",
+                        smf_ue->supi, sess->psi,
+                        sbi_message->h.resource.component[0]);
+                OGS_FSM_TRAN(s,
+                    &smf_gsm_state_wait_pfcp_establishment);
+            END
+            break;
+
+        CASE(OGS_SBI_SERVICE_NAME_NCHF_OFFLINEONLYCHARGING)
+            /*
+             * CHF OfflineChargingDataCreate response (5GC only).
+             *
+             * Arrives after we sent the offline create above.
+             * On success, proceed to PFCP establishment.
+             * On failure, log a warning and proceed anyway --
+             * offline charging is non-blocking for session setup.
+             */
+            stream_id = OGS_POINTER_TO_UINT(e->h.sbi.data);
+            if (stream_id >= OGS_MIN_POOL_ID &&
+                    stream_id <= OGS_MAX_POOL_ID)
+                stream = ogs_sbi_stream_find_by_id(stream_id);
+
+            sess->sm_data.nchf_create_in_flight = false;
+
+            SWITCH(sbi_message->h.resource.component[0])
+            CASE(OGS_SBI_RESOURCE_NAME_OFFLINE_CHARGING_DATA)
+                if (sbi_message->res_status ==
+                            OGS_SBI_HTTP_STATUS_CREATED) {
+                    if (smf_nchf_offlineonlycharging_handle_create(
+                                sess, stream, sbi_message) == false) {
+                        ogs_warn("[%s:%d] CHF Offline Create handle "
+                                "failed, proceeding without charging",
+                                smf_ue->supi, sess->psi);
+                    }
+                } else {
+                    ogs_warn("[%s:%d] CHF Offline Create HTTP error "
+                            "[%d], proceeding without charging",
+                            smf_ue->supi, sess->psi,
+                            sbi_message->res_status);
+                }
+
+                /* PCF is already done; proceed to PFCP */
+                OGS_FSM_TRAN(s,
+                    &smf_gsm_state_wait_pfcp_establishment);
+                break;
+
+            DEFAULT
+                ogs_error("[%s:%d] Invalid CHF Offline resource [%s]",
                         smf_ue->supi, sess->psi,
                         sbi_message->h.resource.component[0]);
                 OGS_FSM_TRAN(s,
@@ -1907,6 +1974,38 @@ void smf_gsm_state_operational(ogs_fsm_t *s, smf_event_t *e)
                     }
                 } else {
                     ogs_warn("[%s:%d] CHF Update HTTP error [%d]",
+                            smf_ue->supi, sess->psi,
+                            sbi_message->res_status);
+                }
+                break;
+
+            DEFAULT
+                ogs_error("[%s:%d] Invalid resource name [%s]",
+                        smf_ue->supi, sess->psi,
+                        sbi_message->h.resource.component[0]);
+            END
+            break;
+
+        CASE(OGS_SBI_SERVICE_NAME_NCHF_OFFLINEONLYCHARGING)
+            /*
+             * CHF OfflineChargingDataUpdate response (CDR recording).
+             *
+             * Triggered by PFCP usage report -> Nchf Offline Update.
+             * On success: snapshot counters, ready for next cycle.
+             * On failure: log warning, session continues.
+             */
+            SWITCH(sbi_message->h.resource.component[0])
+            CASE(OGS_SBI_RESOURCE_NAME_OFFLINE_CHARGING_DATA)
+                if (sbi_message->res_status == OGS_SBI_HTTP_STATUS_OK) {
+                    if (!smf_nchf_offlineonlycharging_handle_update(
+                                sess, stream, sbi_message)) {
+                        ogs_warn("[%s:%d] CHF Offline Update "
+                                "handle failed",
+                                smf_ue->supi, sess->psi);
+                    }
+                } else {
+                    ogs_warn("[%s:%d] CHF Offline Update HTTP "
+                            "error [%d]",
                             smf_ue->supi, sess->psi,
                             sbi_message->res_status);
                 }
@@ -4028,6 +4127,63 @@ void smf_gsm_state_5gc_session_will_deregister(ogs_fsm_t *s, smf_event_t *e)
 
             DEFAULT
                 ogs_error("[%s:%d] Invalid CHF resource [%s]",
+                        smf_ue->supi, sess->psi,
+                        sbi_message->h.resource.component[0]);
+            END
+            break;
+
+        CASE(OGS_SBI_SERVICE_NAME_NCHF_OFFLINEONLYCHARGING)
+            /*
+             * CHF OfflineChargingDataRelease response.
+             *
+             * Same cleanup chain as ConvergedCharging: after
+             * clearing the offline CHF state, chain to the PCF
+             * policy delete (next step in cleanup).
+             */
+            SWITCH(sbi_message->h.resource.component[0])
+            CASE(OGS_SBI_RESOURCE_NAME_OFFLINE_CHARGING_DATA)
+                if (sbi_message->res_status !=
+                        OGS_SBI_HTTP_STATUS_NO_CONTENT) {
+                    ogs_warn("[%s:%d] CHF Offline Release HTTP "
+                            "error [%d], continuing teardown",
+                            smf_ue->supi, sess->psi,
+                            sbi_message->res_status);
+                }
+
+                smf_nchf_offlineonlycharging_handle_release(
+                        sess, stream, sbi_message);
+
+                /*
+                 * Chain to PCF policy delete.
+                 * Re-use the same cleanup flow that
+                 * POLICY_FIRST would have taken had there
+                 * been no CHF association.
+                 */
+                if (PCF_SM_POLICY_ASSOCIATED(sess)) {
+                    r = smf_sbi_discover_and_send(
+                        OGS_SBI_SERVICE_TYPE_NPCF_SMPOLICYCONTROL,
+                        NULL,
+                        smf_npcf_smpolicycontrol_build_delete,
+                        sess, stream, e->h.sbi.state, NULL);
+                    ogs_expect(r == OGS_OK);
+                    ogs_assert(r != OGS_ERROR);
+                } else if (UDM_SDM_SUBSCRIBED(sess)) {
+                    r = smf_sbi_cleanup_session(
+                            sess, stream, e->h.sbi.state,
+                            SMF_SBI_CLEANUP_MODE_SUBSCRIPTION_FIRST);
+                    ogs_expect(r == OGS_OK);
+                    ogs_assert(r != OGS_ERROR);
+                } else {
+                    r = smf_sbi_cleanup_session(
+                            sess, stream, e->h.sbi.state,
+                            SMF_SBI_CLEANUP_MODE_CONTEXT_ONLY);
+                    ogs_expect(r == OGS_OK);
+                    ogs_assert(r != OGS_ERROR);
+                }
+                break;
+
+            DEFAULT
+                ogs_error("[%s:%d] Invalid CHF Offline resource [%s]",
                         smf_ue->supi, sess->psi,
                         sbi_message->h.resource.component[0]);
             END

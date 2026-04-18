@@ -75,6 +75,9 @@ int smf_sbi_open(void)
     ogs_sbi_subscription_spec_add(
             OpenAPI_nf_type_NULL,
             OGS_SBI_SERVICE_NAME_NCHF_CONVERGEDCHARGING);
+    ogs_sbi_subscription_spec_add(
+            OpenAPI_nf_type_NULL,
+            OGS_SBI_SERVICE_NAME_NCHF_OFFLINEONLYCHARGING);
 
     if (ogs_sbi_server_start_all(ogs_sbi_server_handler) != OGS_OK)
         return OGS_ERROR;
@@ -273,6 +276,43 @@ int smf_nchf_convergedcharging_send_release(
             OGS_SBI_SERVICE_TYPE_NCHF_CONVERGEDCHARGING,
             NULL,
             smf_nchf_convergedcharging_build_release,
+            sess, stream, 0, NULL);
+}
+
+/*
+ * Nchf_OfflineOnlyCharging send helpers (5GC only)
+ */
+int smf_nchf_offlineonlycharging_send_create(
+        smf_sess_t *sess, ogs_sbi_stream_t *stream)
+{
+    return smf_sbi_discover_and_send(
+            OGS_SBI_SERVICE_TYPE_NCHF_OFFLINEONLYCHARGING,
+            NULL,
+            smf_nchf_offlineonlycharging_build_create,
+            sess, stream, 0, NULL);
+}
+
+int smf_nchf_offlineonlycharging_send_update(
+        smf_sess_t *sess, ogs_pool_id_t pfcp_xact_id)
+{
+    /* Store the PFCP transaction ID so the CHF response handler
+     * can look up the original PFCP xact for the Session Report */
+    sess->nchf_offline.pfcp_xact_id = pfcp_xact_id;
+
+    return smf_sbi_discover_and_send(
+            OGS_SBI_SERVICE_TYPE_NCHF_OFFLINEONLYCHARGING,
+            NULL,
+            smf_nchf_offlineonlycharging_build_update,
+            sess, NULL, 0, NULL);
+}
+
+int smf_nchf_offlineonlycharging_send_release(
+        smf_sess_t *sess, ogs_sbi_stream_t *stream)
+{
+    return smf_sbi_discover_and_send(
+            OGS_SBI_SERVICE_TYPE_NCHF_OFFLINEONLYCHARGING,
+            NULL,
+            smf_nchf_offlineonlycharging_build_release,
             sess, stream, 0, NULL);
 }
 
@@ -912,6 +952,14 @@ int smf_sbi_cleanup_session(
                 OGS_SBI_SERVICE_TYPE_NCHF_CONVERGEDCHARGING,
                 NULL,
                 smf_nchf_convergedcharging_build_release,
+                sess, stream, state, NULL);
+            ogs_expect(r == OGS_OK);
+            ogs_assert(r != OGS_ERROR);
+        } else if (NCHF_OFFLINE_DATA_ASSOCIATED(sess)) {
+            r = smf_sbi_discover_and_send(
+                OGS_SBI_SERVICE_TYPE_NCHF_OFFLINEONLYCHARGING,
+                NULL,
+                smf_nchf_offlineonlycharging_build_release,
                 sess, stream, state, NULL);
             ogs_expect(r == OGS_OK);
             ogs_assert(r != OGS_ERROR);
